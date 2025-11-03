@@ -1,109 +1,24 @@
 [
   {
-    "objectID": "notebooks/starter_bank.html",
-    "href": "notebooks/starter_bank.html",
-    "title": "Alvin Charles - Data Science Portfolio",
-    "section": "",
-    "text": "# STEP 1: Import Libraries\n\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.metrics import (\n    classification_report, confusion_matrix, accuracy_score, roc_auc_score\n)\nfrom imblearn.over_sampling import SMOTE\n\npd.set_option(\"display.max_columns\", None)\nsns.set(style=\"whitegrid\", palette=\"viridis\", font_scale=1.1)\n\n\n# STEP 2: Load Dataset\nurl = \"https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/bank.csv\"\ndata = pd.read_csv(url)\n\nprint(\"✅ Data loaded successfully!\")\nprint(\"Shape:\", data.shape)\ndisplay(data.head())\n\n✅ Data loaded successfully!\nShape: (37069, 20)\n\n\n\n    \n\n\n\n\n\n\nage\njob\nmarital\neducation\ndefault\nhousing\nloan\ncontact\nmonth\nday_of_week\ncampaign\npdays\nprevious\npoutcome\nemp.var.rate\ncons.price.idx\ncons.conf.idx\neuribor3m\nnr.employed\ny\n\n\n\n\n0\n56\nhousemaid\nmarried\nbasic.4y\nno\nno\nno\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n1\n57\nservices\nmarried\nhigh.school\nunknown\nno\nno\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n2\n37\nservices\nmarried\nhigh.school\nno\nyes\nno\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n3\n40\nadmin.\nmarried\nbasic.6y\nno\nno\nno\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n4\n56\nservices\nmarried\nhigh.school\nno\nno\nyes\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n\n\n\n    \n\n  \n    \n\n  \n    \n  \n    \n\n  \n\n    \n  \n\n\n    \n      \n\n\n    \n        \n    \n\n      \n\n\n\n      \n    \n\n    \n  \n\n\n\n# STEP 3: Data Cleaning & Transformation\n\ndata.replace(\"unknown\", pd.NA, inplace=True)\ndata.fillna(data.mode().iloc[0], inplace=True)\n\ndata[\"pdays\"] = data[\"pdays\"].replace(999, -1)\n\neducation_mapping = {\n    \"illiterate\": 0,\n    \"basic.4y\": 4,\n    \"basic.6y\": 6,\n    \"basic.9y\": 9,\n    \"high.school\": 12,\n    \"professional.course\": 13,\n    \"university.degree\": 16,\n    \"unknown\": -1\n}\ndata[\"education\"] = data[\"education\"].replace(education_mapping)\n\ncategorical_columns = [\n    \"job\", \"marital\", \"default\", \"housing\", \"loan\",\n    \"contact\", \"month\", \"day_of_week\", \"poutcome\"\n]\ndata = pd.get_dummies(data, columns=categorical_columns, drop_first=True)\n\ndata[\"y\"] = data[\"y\"].replace({\"no\": 0, \"yes\": 1}).astype(int)\n\nprint(\"✅ Data cleaned and encoded successfully!\")\nprint(\"Final shape:\", data.shape)\n\n✅ Data cleaned and encoded successfully!\nFinal shape: (37069, 42)\n\n\n/tmp/ipython-input-1174679516.py:23: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`\n  data[\"education\"] = data[\"education\"].replace(education_mapping)\n/tmp/ipython-input-1174679516.py:33: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`\n  data[\"y\"] = data[\"y\"].replace({\"no\": 0, \"yes\": 1}).astype(int)\n\n\n\n# STEP 4: Split Data\n\nX = data.drop(\"y\", axis=1)\ny = data[\"y\"]\n\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42, stratify=y\n)\n\nprint(\"✅ Data split complete!\")\nprint(\"Training size:\", X_train.shape)\nprint(\"Testing size:\", X_test.shape)\nprint(\"\\nClass balance BEFORE SMOTE:\\n\", y_train.value_counts(normalize=True))\n\n✅ Data split complete!\nTraining size: (29655, 41)\nTesting size: (7414, 41)\n\nClass balance BEFORE SMOTE:\n y\n0    0.886495\n1    0.113505\nName: proportion, dtype: float64\n\n\n\n# STEP 5: Balance Data using SMOTE\n\nsmote = SMOTE(random_state=42, sampling_strategy=1.0)\nX_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)\n\nprint(\"✅ SMOTE applied successfully!\")\nprint(\"Training size after SMOTE:\", X_train_resampled.shape)\nprint(\"Class balance AFTER SMOTE:\\n\", y_train_resampled.value_counts(normalize=True))\n\n✅ SMOTE applied successfully!\nTraining size after SMOTE: (52578, 41)\nClass balance AFTER SMOTE:\n y\n0    0.5\n1    0.5\nName: proportion, dtype: float64\n\n\n\n# STEP 6: Train Random Forest Classifier\n\nrf = RandomForestClassifier(\n    n_estimators=200,\n    max_depth=10,\n    min_samples_leaf=25,\n    random_state=42,\n    n_jobs=-1\n)\n\nrf.fit(X_train_resampled, y_train_resampled)\nprint(\"✅ Random Forest model trained successfully!\")\n\n✅ Random Forest model trained successfully!\n\n\n\n# STEP 7: Evaluate Model\n\ny_pred = rf.predict(X_test)\ny_proba = rf.predict_proba(X_test)[:, 1]\n\nprint(\"\\n📊 Model Performance:\")\nprint(\"Accuracy:\", accuracy_score(y_test, y_pred))\nprint(\"ROC-AUC Score:\", roc_auc_score(y_test, y_proba))\nprint(\"\\nClassification Report:\")\nprint(classification_report(y_test, y_pred, target_names=[\"No\", \"Yes\"]))\n\ncm = confusion_matrix(y_test, y_pred)\nplt.figure(figsize=(6,4))\nsns.heatmap(cm, annot=True, fmt=\"d\", cmap=\"Blues\")\nplt.title(\"Confusion Matrix\")\nplt.xlabel(\"Predicted\")\nplt.ylabel(\"Actual\")\nplt.tight_layout()\nplt.show()\n\n\n📊 Model Performance:\nAccuracy: 0.8626922039384948\nROC-AUC Score: 0.7836544369476495\n\nClassification Report:\n              precision    recall  f1-score   support\n\n          No       0.95      0.90      0.92      6572\n         Yes       0.43      0.60      0.50       842\n\n    accuracy                           0.86      7414\n   macro avg       0.69      0.75      0.71      7414\nweighted avg       0.89      0.86      0.87      7414\n\n\n\n\n\n\n\n\n\n\n\n# STEP 8: Feature Importance\n\nfeature_importance = pd.Series(rf.feature_importances_, index=X.columns).sort_values(ascending=False)\ntop_features = feature_importance.head(10)\n\nplt.figure(figsize=(8,5))\nsns.barplot(x=top_features.values, y=top_features.index, palette=\"viridis\")\nplt.title(\"Top 10 Most Important Features\")\nplt.xlabel(\"Importance Score\")\nplt.ylabel(\"Feature\")\nplt.tight_layout()\nplt.show()\n\nprint(\"\\n🏆 Top 10 Important Features:\")\nprint(top_features)\n\n/tmp/ipython-input-2471977237.py:9: FutureWarning: \n\nPassing `palette` without assigning `hue` is deprecated and will be removed in v0.14.0. Assign the `y` variable to `hue` and set `legend=False` for the same effect.\n\n  sns.barplot(x=top_features.values, y=top_features.index, palette=\"viridis\")\n\n\n\n\n\n\n\n\n\n\n🏆 Top 10 Important Features:\neuribor3m           0.184502\nnr.employed         0.136018\nemp.var.rate        0.091356\ncons.conf.idx       0.089699\ncons.price.idx      0.062262\npdays               0.044008\npoutcome_success    0.039110\nhousing_yes         0.030035\nmarital_married     0.029772\nday_of_week_wed     0.029734\ndtype: float64\n\n\n\n# STEP 9: Business Insights Visuals\n\nmarital_cols = [c for c in data.columns if \"marital_\" in c]\nmarital_summary = (\n    data.melt(id_vars=\"y\", value_vars=marital_cols, var_name=\"MaritalStatus\", value_name=\"Active\")\n    .query(\"Active == 1\")\n    .groupby(\"MaritalStatus\")[\"y\"].mean()\n    .sort_values(ascending=False)\n)\nmarital_summary.index = marital_summary.index.str.replace(\"marital_\", \"\").str.title()\n\nplt.figure(figsize=(7,5))\nsns.barplot(x=marital_summary.index, y=marital_summary.values, palette=\"crest\")\nplt.title(\"💍 Subscription Rate by Marital Status\", fontsize=13, weight='bold')\nplt.ylabel(\"Average Subscription Rate\")\nplt.xlabel(\"Marital Status\")\nfor i, val in enumerate(marital_summary.values):\n    plt.text(i, val + 0.002, f\"{val*100:.2f}%\", ha='center', va='bottom')\nplt.tight_layout()\nplt.show()\n\njob_cols = [col for col in data.columns if \"job_\" in col]\njob_summary = (\n    data.melt(id_vars=\"y\", value_vars=job_cols, var_name=\"Job\", value_name=\"Active\")\n    .query(\"Active == 1\")\n    .groupby(\"Job\")[\"y\"].mean()\n    .sort_values(ascending=False)\n)\njob_summary.index = job_summary.index.str.replace(\"job_\", \"\").str.title()\n\nplt.figure(figsize=(9,6))\nsns.barplot(x=job_summary.values, y=job_summary.index, palette=\"viridis\")\nplt.title(\"💼 Subscription Rate by Profession\", fontsize=13, weight='bold')\nplt.xlabel(\"Average Subscription Rate\")\nplt.ylabel(\"Profession\")\nfor i, val in enumerate(job_summary.values):\n    plt.text(val + 0.002, i, f\"{val*100:.2f}%\", va='center')\nplt.tight_layout()\nplt.show()\n\ncampaign_effect = data.groupby(\"campaign\")[\"y\"].mean()\nplt.figure(figsize=(7,5))\nplt.plot(campaign_effect.index, campaign_effect.values, marker=\"o\")\nplt.title(\"☎️ Success Rate vs. Number of Contacts\")\nplt.xlabel(\"Number of Contacts in Campaign\")\nplt.ylabel(\"Subscription Rate\")\nplt.grid(alpha=0.3)\nplt.tight_layout()\nplt.show()\n\n/tmp/ipython-input-1354924602.py:16: FutureWarning: \n\nPassing `palette` without assigning `hue` is deprecated and will be removed in v0.14.0. Assign the `x` variable to `hue` and set `legend=False` for the same effect.\n\n  sns.barplot(x=marital_summary.index, y=marital_summary.values, palette=\"crest\")\n/tmp/ipython-input-1354924602.py:22: UserWarning: Glyph 128141 (\\N{RING}) missing from font(s) DejaVu Sans.\n  plt.tight_layout()\n/usr/local/lib/python3.12/dist-packages/IPython/core/pylabtools.py:151: UserWarning: Glyph 128141 (\\N{RING}) missing from font(s) DejaVu Sans.\n  fig.canvas.print_figure(bytes_io, **kw)\n\n\n\n\n\n\n\n\n\n/tmp/ipython-input-1354924602.py:36: FutureWarning: \n\nPassing `palette` without assigning `hue` is deprecated and will be removed in v0.14.0. Assign the `y` variable to `hue` and set `legend=False` for the same effect.\n\n  sns.barplot(x=job_summary.values, y=job_summary.index, palette=\"viridis\")\n/tmp/ipython-input-1354924602.py:42: UserWarning: Glyph 128188 (\\N{BRIEFCASE}) missing from font(s) DejaVu Sans.\n  plt.tight_layout()\n/usr/local/lib/python3.12/dist-packages/IPython/core/pylabtools.py:151: UserWarning: Glyph 128188 (\\N{BRIEFCASE}) missing from font(s) DejaVu Sans.\n  fig.canvas.print_figure(bytes_io, **kw)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n# STEP 10: Predict on Holdout Data\n\nholdout = pd.read_csv(\"https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/bank_holdout_test.csv\")\n\nholdout.replace(\"unknown\", pd.NA, inplace=True)\nholdout.fillna(data.mode().iloc[0], inplace=True)\nholdout[\"pdays\"] = holdout[\"pdays\"].replace(999, -1)\nholdout[\"education\"] = holdout[\"education\"].replace(education_mapping)\nholdout = pd.get_dummies(holdout, columns=categorical_columns, drop_first=True)\n\nmissing_cols = set(X.columns) - set(holdout.columns)\nfor c in missing_cols:\n    holdout[c] = 0\nholdout = holdout[X.columns]\n\npredictions = rf.predict(holdout)\npd.DataFrame(predictions, columns=[\"predictions\"]).to_csv(\"team3-module2-predictions2.0.csv\", index=False)\nprint(\"📁 Predictions saved to: team3-module2-predictions2.0.csv\")\n\n📁 Predictions saved to: team3-module2-predictions2.0.csv\n\n\n/tmp/ipython-input-3289667163.py:11: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`\n  holdout[\"education\"] = holdout[\"education\"].replace(education_mapping)\n\n\n\nimport pandas as pd\n\npreds = pd.read_csv(\"team3-module2-predictions2.0.csv\")\n\nprint(\"✅ File Loaded! Total Predictions:\", len(preds))\n\npercentages = preds[\"predictions\"].value_counts(normalize=True) * 100\nprint(\"\\n📊 Prediction Breakdown (%):\")\nprint(percentages.round(2))\n\nimport matplotlib.pyplot as plt\nplt.figure(figsize=(5,5))\nplt.pie(percentages, labels=percentages.index, autopct='%1.2f%%', colors=[\"skyblue\", \"lightgreen\"])\nplt.title(\"Distribution of Predictions (0 = No, 1 = Yes)\")\nplt.show()\n\n✅ File Loaded! Total Predictions: 4119\n\n📊 Prediction Breakdown (%):\npredictions\n0    85.14\n1    14.86\nName: proportion, dtype: float64\n\n\n\n\n\n\n\n\n\n\n\n\n Back to top"
-  },
-  {
-    "objectID": "Story_Telling/project2.html",
-    "href": "Story_Telling/project2.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Story Telling",
-      "Project 2"
-    ]
-  },
-  {
-    "objectID": "Story_Telling/project3.html",
-    "href": "Story_Telling/project3.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Story Telling",
-      "Project 3"
-    ]
-  },
-  {
-    "objectID": "Cleansing_Projects/project1.html",
-    "href": "Cleansing_Projects/project1.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Data Cleansing",
-      "Project 1"
-    ]
-  },
-  {
-    "objectID": "Cleansing_Projects/project4.html",
-    "href": "Cleansing_Projects/project4.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Data Cleansing",
-      "Project 4"
-    ]
-  },
-  {
-    "objectID": "Cleansing_Projects/project5.html",
-    "href": "Cleansing_Projects/project5.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Data Cleansing",
-      "Project 5"
-    ]
-  },
-  {
-    "objectID": "ml.html",
-    "href": "ml.html",
-    "title": "about me",
-    "section": "",
-    "text": "MarkDown Basics",
-    "crumbs": [
-      "Machine Learning"
-    ]
-  },
-  {
-    "objectID": "ml.html#title-2-header",
-    "href": "ml.html#title-2-header",
-    "title": "about me",
-    "section": "",
-    "text": "MarkDown Basics",
-    "crumbs": [
-      "Machine Learning"
-    ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "about me",
-    "section": "",
-    "text": "MarkDown Basics"
-  },
-  {
-    "objectID": "index.html#title-2-header",
-    "href": "index.html#title-2-header",
-    "title": "about me",
-    "section": "",
-    "text": "MarkDown Basics"
-  },
-  {
-    "objectID": "Full_Stack/project2.html",
-    "href": "Full_Stack/project2.html",
+    "objectID": "Full_Stack/project5.html",
+    "href": "Full_Stack/project5.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
       "Full Stack",
-      "Project 2"
+      "Project 5"
+    ]
+  },
+  {
+    "objectID": "Full_Stack/project4.html",
+    "href": "Full_Stack/project4.html",
+    "title": "Client Report - [Insert Project Title]",
+    "section": "",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Full Stack",
+      "Project 4"
     ]
   },
   {
@@ -118,37 +33,11 @@
     ]
   },
   {
-    "objectID": "Machine_Learning/project1.html",
-    "href": "Machine_Learning/project1.html",
-    "title": "Client Report - [Insert Project Title]",
+    "objectID": "notebooks/starter_housing.html",
+    "href": "notebooks/starter_housing.html",
+    "title": "Alvin Charles - Data Science Portfolio",
     "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Machine Learning",
-      "Project 1"
-    ]
-  },
-  {
-    "objectID": "Machine_Learning/project4.html",
-    "href": "Machine_Learning/project4.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Machine Learning",
-      "Project 4"
-    ]
-  },
-  {
-    "objectID": "Machine_Learning/project5.html",
-    "href": "Machine_Learning/project5.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Machine Learning",
-      "Project 5"
-    ]
+    "text": "import pandas as pd\n\nhousing = pd.read_csv('https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/housing.csv')\n\n\n!pip install xgboost shap -q\n\nimport pandas as pd\nimport numpy as np\nimport requests\nfrom sklearn.model_selection import train_test_split, KFold\nfrom sklearn.preprocessing import OneHotEncoder\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.metrics import mean_squared_error, r2_score\nfrom xgboost import XGBRegressor\nimport shap\nimport matplotlib.pyplot as plt\n\n\nurl = \"https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/housing.csv\"\ndf = pd.read_csv(url)\nprint(\"Initial shape:\", df.shape)\ndf.head()\n\nInitial shape: (20000, 21)\n\n\n\n    \n\n\n\n\n\n\nid\ndate\nbedrooms\nbathrooms\nsqft_living\nsqft_lot\nfloors\nwaterfront\nview\ncondition\n...\nsqft_above\nsqft_basement\nyr_built\nyr_renovated\nzipcode\nlat\nlong\nsqft_living15\nsqft_lot15\nprice\n\n\n\n\n0\n1565930130\n20141104T000000\n4\n3.25\n3760\n4675\n2.0\n0\n0\n3\n...\n2740\n1020\n2007\n0\n98038\n47.3862\n-122.048\n3280\n4033\n429900.0\n\n\n1\n3279000420\n20150115T000000\n3\n1.75\n1460\n7800\n1.0\n0\n0\n2\n...\n1040\n420\n1979\n0\n98023\n47.3035\n-122.382\n1310\n7865\n233000.0\n\n\n2\n194000575\n20141014T000000\n4\n1.00\n1340\n5800\n1.5\n0\n2\n3\n...\n1340\n0\n1914\n0\n98116\n47.5658\n-122.389\n1900\n5800\n455000.0\n\n\n3\n2115510160\n20141208T000000\n3\n1.75\n1440\n8050\n1.0\n0\n0\n3\n...\n1440\n0\n1985\n0\n98023\n47.3187\n-122.390\n1790\n7488\n258950.0\n\n\n4\n7522500005\n20140815T000000\n2\n1.50\n1780\n4750\n1.0\n0\n0\n4\n...\n1080\n700\n1947\n0\n98117\n47.6859\n-122.395\n1690\n5962\n555000.0\n\n\n\n\n5 rows × 21 columns\n\n    \n\n  \n    \n\n  \n    \n  \n    \n\n  \n\n    \n  \n\n\n    \n      \n\n\n    \n        \n    \n\n      \n\n\n\n      \n    \n\n    \n  \n\n\n\ndef handle_age_at_sale(df, method='adjust'):\n    \"\"\"Compute 'age_at_sale' and fix invalid 'yr_built' vs 'sale_year' issues.\"\"\"\n    if method == 'nan':\n        df['age_at_sale'] = df['sale_year'] - df['yr_built']\n        df.loc[df['age_at_sale'] &lt; 0, 'age_at_sale'] = np.nan\n    elif method == 'zero':\n        df['age_at_sale'] = df['sale_year'] - df['yr_built']\n        df.loc[df['age_at_sale'] &lt; 0, 'age_at_sale'] = 0\n    elif method == 'adjust':\n        df.loc[df['yr_built'] &gt; df['sale_year'], 'yr_built'] = df['sale_year']\n        df['age_at_sale'] = df['sale_year'] - df['yr_built']\n    else:\n        raise ValueError(\"method must be 'nan', 'zero', or 'adjust'\")\n    return df\n\n# --- Parse date fields and create temporal features\ndf['date'] = pd.to_datetime(df['date'].str.replace('T000000', ''), errors='coerce')\ndf['sale_year'] = df['date'].dt.year\ndf['sale_month'] = df['date'].dt.month\ndf['sale_dayofweek'] = df['date'].dt.dayofweek\n\n# --- Binary engineered columns\ndf['renovated'] = df['yr_renovated'].apply(lambda x: 1 if x &gt; 0 else 0)\ndf['high_grade'] = (df['grade'] &gt; 10).astype(int)\ndf['low_grade'] = (df['grade'] &lt; 7).astype(int)\ndf['sqft_living_x_grade'] = df['sqft_living'] * df['grade']\ndf['waterfront_x_sqft_living'] = df['sqft_living'] * df['waterfront']\ndf['has_basement'] = np.where(df['sqft_basement'] &gt; 0, 1, 0)\n\ndf = handle_age_at_sale(df, method='adjust')\nprint(\"✅ Engineered features added.\")\n\n✅ Engineered features added.\n\n\n\n# Example Census API pull (2015 ACS)\nurl = (\n    \"https://api.census.gov/data/2015/acs/acs5?\"\n    \"get=NAME,B25001_001E,B25003_002E,B25003_003E,B11016_001E,\"\n    \"B12001_001E,B12001_002E,B15003_001E,B15003_022E,B15003_023E,\"\n    \"B15003_024E,B15003_025E,B23025_003E,B23025_005E\"\n    \"&for=zip%20code%20tabulation%20area:*\"\n)\nresponse = requests.get(url)\n\nif response.status_code == 200:\n    data = response.json()\n    df_census = pd.DataFrame(data[1:], columns=data[0])\n    df_census.rename(columns={'zip code tabulation area': 'zipcode'}, inplace=True)\n    df_census['zipcode'] = df_census['zipcode'].astype(str).str.zfill(5)\n    for col in df_census.columns:\n        if col != 'zipcode' and col != 'NAME':\n            df_census[col] = pd.to_numeric(df_census[col], errors='coerce')\n\n    # Calculate key percentages\n    df_census['percent_owner_occupied_2015'] = df_census['B25003_002E'] / df_census['B25001_001E'] * 100\n    df_census['percent_renter_occupied_2015'] = df_census['B25003_003E'] / df_census['B25001_001E'] * 100\n    df_census['unemployment_rate_2015'] = df_census['B23025_005E'] / (df_census['B23025_003E'] + df_census['B23025_005E']) * 100\n    df_census['percent_hs_grad_or_higher_2015'] = (\n        (df_census['B15003_022E'] + df_census['B15003_023E'] + df_census['B15003_024E'] + df_census['B15003_025E'])\n        / df_census['B15003_001E'] * 100\n    )\n    df_census = df_census[['zipcode', 'percent_owner_occupied_2015', 'percent_renter_occupied_2015',\n                           'unemployment_rate_2015', 'percent_hs_grad_or_higher_2015']]\n\n    # Merge into housing\n    df['zipcode'] = df['zipcode'].astype(str).str.zfill(5)\n    df = df.merge(df_census, on='zipcode', how='left')\n    print(\"✅ Census data merged successfully.\")\nelse:\n    print(\"❌ Error fetching Census data:\", response.status_code)\n\n✅ Census data merged successfully.\n\n\n\ncols_drop = ['id', 'price', 'date', 'yr_built', 'yr_renovated', 'sqft_above']\nX = df.drop(columns=cols_drop)\ny = df['price']\n\ncat_features = ['zipcode', 'view', 'condition', 'grade', 'waterfront']\nnum_features = [col for col in X.select_dtypes(include=['int64','float64']).columns if col not in cat_features]\n\nprint(\"Numerical Features:\", num_features)\nprint(\"Categorical Features:\", cat_features)\n\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\nprint(f\"Train shape: {X_train.shape}, Test shape: {X_test.shape}\")\n\nNumerical Features: ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors', 'sqft_basement', 'lat', 'long', 'sqft_living15', 'sqft_lot15', 'renovated', 'high_grade', 'low_grade', 'sqft_living_x_grade', 'waterfront_x_sqft_living', 'has_basement', 'age_at_sale', 'percent_owner_occupied_2015', 'percent_renter_occupied_2015', 'unemployment_rate_2015', 'percent_hs_grad_or_higher_2015']\nCategorical Features: ['zipcode', 'view', 'condition', 'grade', 'waterfront']\nTrain shape: (16000, 29), Test shape: (4000, 29)\n\n\n\nfrom sklearn.preprocessing import OneHotEncoder\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.pipeline import Pipeline\n\npreprocessor = ColumnTransformer([\n    ('num', 'passthrough', num_features),\n    ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat_features)\n])\n\nxgb = XGBRegressor(\n    n_estimators=800,\n    max_depth=8,\n    learning_rate=0.05,\n    subsample=0.8,\n    colsample_bytree=0.8,\n    reg_lambda=1.0,\n    random_state=42,\n    tree_method=\"hist\"\n)\n\npipeline = Pipeline([\n    ('preprocessor', preprocessor),\n    ('regressor', xgb)\n])\n\n\npipeline.fit(X_train, np.log1p(y_train))\ny_pred = np.expm1(pipeline.predict(X_test))\n\nrmse = np.sqrt(mean_squared_error(y_test, y_pred))\nr2 = r2_score(y_test, y_pred)\n\nprint(f\"Test RMSE: ${rmse:,.2f}\")\nprint(f\"Test R²: {r2:.4f}\")\n\nTest RMSE: $131,778.10\nTest R²: 0.8849\n\n\n\n# === STEP 8 FINAL — Feature Importance + SHAP (working version) ===\n\nxgb_raw = pipeline.named_steps['regressor']\npreproc = pipeline.named_steps['preprocessor']\n\ncat_out = preproc.named_transformers_['cat'].get_feature_names_out(cat_features)\nall_feature_names = list(num_features) + list(cat_out)\n\n# Feature Importance table\nimportance_df = pd.DataFrame({\n    'Feature': all_feature_names,\n    'Importance': xgb_raw.feature_importances_\n}).sort_values(by='Importance', ascending=False)\n\nprint(importance_df.head(15))\n\n\n# SHAP KERNEL EXPLAINER ON PREPROCESSED SPACE\nimport shap\n\n# background sample\nX_background = preproc.transform(X_train.sample(60, random_state=42))\nX_background = np.array(X_background, dtype=float)\n\n# transformed test\nX_trans_test = preproc.transform(X_test)\nX_trans_test = np.array(X_trans_test, dtype=float)\n\n# prediction function DIRECTLY on processed numeric matrix:\ndef predict_fn(data):\n    # data is numeric transformed data\n    preds_log = xgb_raw.predict(data)       # model outputs LOG price\n    return np.expm1(preds_log)              # convert back to price dollars\n\nexplainer = shap.KernelExplainer(predict_fn, X_background)\n\nshap_values = explainer.shap_values(X_trans_test[:150])\n\nshap.summary_plot(shap_values, X_trans_test[:150], feature_names=all_feature_names)\nplt.title(\"SHAP Summary Plot - Final Working Version\")\nplt.show()\n\n                            Feature  Importance\n20   percent_hs_grad_or_higher_2015    0.255071\n13              sqft_living_x_grade    0.096238\n114                    waterfront_1    0.043181\n95                           view_4    0.043007\n14         waterfront_x_sqft_living    0.032571\n113                    waterfront_0    0.032568\n11                       high_grade    0.032090\n91                           view_0    0.031518\n33                    zipcode_98022    0.024107\n6                               lat    0.019275\n24                    zipcode_98004    0.018916\n19           unemployment_rate_2015    0.014222\n58                    zipcode_98074    0.013117\n104                         grade_5    0.010161\n2                       sqft_living    0.009354\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n Back to top"
   },
   {
     "objectID": "Cleansing_Exploration/project1.html",
@@ -158,59 +47,85 @@
     "text": "Paste in a template\n\n\n\n\n Back to top"
   },
   {
-    "objectID": "Cleansing_Exploration/project4.html",
-    "href": "Cleansing_Exploration/project4.html",
+    "objectID": "Cleansing_Exploration/project2.html",
+    "href": "Cleansing_Exploration/project2.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top"
   },
   {
-    "objectID": "Cleansing_Exploration/project5.html",
-    "href": "Cleansing_Exploration/project5.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top"
-  },
-  {
-    "objectID": "competition.html",
-    "href": "competition.html",
+    "objectID": "full_stack.html",
+    "href": "full_stack.html",
     "title": "about me",
     "section": "",
     "text": "MarkDown Basics",
     "crumbs": [
-      "Competition"
+      "Full Stack"
     ]
   },
   {
-    "objectID": "competition.html#title-2-header",
-    "href": "competition.html#title-2-header",
+    "objectID": "full_stack.html#title-2-header",
+    "href": "full_stack.html#title-2-header",
     "title": "about me",
     "section": "",
     "text": "MarkDown Basics",
     "crumbs": [
-      "Competition"
+      "Full Stack"
     ]
   },
   {
-    "objectID": "Competition/project2.html",
-    "href": "Competition/project2.html",
+    "objectID": "Cleansing_Projects/project5.html",
+    "href": "Cleansing_Projects/project5.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Competition",
-      "Project 2"
+      "Data Cleansing",
+      "Project 5"
     ]
   },
   {
-    "objectID": "Competition/project3.html",
-    "href": "Competition/project3.html",
+    "objectID": "Cleansing_Projects/project4.html",
+    "href": "Cleansing_Projects/project4.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Competition",
+      "Data Cleansing",
+      "Project 4"
+    ]
+  },
+  {
+    "objectID": "Cleansing_Projects/project3.html",
+    "href": "Cleansing_Projects/project3.html",
+    "title": "Client Report - [Insert Project Title]",
+    "section": "",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Data Cleansing",
       "Project 3"
+    ]
+  },
+  {
+    "objectID": "Story_Telling/project1.html",
+    "href": "Story_Telling/project1.html",
+    "title": "Client Report - [Insert Project Title]",
+    "section": "",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Story Telling",
+      "Project 1"
+    ]
+  },
+  {
+    "objectID": "Story_Telling/project2.html",
+    "href": "Story_Telling/project2.html",
+    "title": "Client Report - [Insert Project Title]",
+    "section": "",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Story Telling",
+      "Project 2"
     ]
   },
   {
@@ -256,25 +171,76 @@
     "text": "1600 Royal Mint, London\n\nWarden\nMinted coins\n\n1600 Lucasian professor of Mathematics, Cambridge University"
   },
   {
-    "objectID": "Competition/project5.html",
-    "href": "Competition/project5.html",
+    "objectID": "Machine_Learning/project5.html",
+    "href": "Machine_Learning/project5.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Competition",
+      "Machine Learning",
       "Project 5"
     ]
   },
   {
-    "objectID": "Competition/project4.html",
-    "href": "Competition/project4.html",
+    "objectID": "Machine_Learning/project4.html",
+    "href": "Machine_Learning/project4.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Competition",
+      "Machine Learning",
       "Project 4"
+    ]
+  },
+  {
+    "objectID": "Machine_Learning/project3.html",
+    "href": "Machine_Learning/project3.html",
+    "title": "Client Report - [Insert Project Title]",
+    "section": "",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Machine Learning",
+      "Project 3"
+    ]
+  },
+  {
+    "objectID": "exploration.html",
+    "href": "exploration.html",
+    "title": "about me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Data Exploration"
+    ]
+  },
+  {
+    "objectID": "exploration.html#title-2-header",
+    "href": "exploration.html#title-2-header",
+    "title": "about me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Data Exploration"
+    ]
+  },
+  {
+    "objectID": "competition.html",
+    "href": "competition.html",
+    "title": "about me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Competition"
+    ]
+  },
+  {
+    "objectID": "competition.html#title-2-header",
+    "href": "competition.html#title-2-header",
+    "title": "about me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Competition"
     ]
   },
   {
@@ -289,38 +255,48 @@
     ]
   },
   {
-    "objectID": "full_stack.html",
-    "href": "full_stack.html",
-    "title": "about me",
+    "objectID": "Competition/project2.html",
+    "href": "Competition/project2.html",
+    "title": "Client Report - [Insert Project Title]",
     "section": "",
-    "text": "MarkDown Basics",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Full Stack"
+      "Competition",
+      "Project 2"
     ]
   },
   {
-    "objectID": "full_stack.html#title-2-header",
-    "href": "full_stack.html#title-2-header",
-    "title": "about me",
+    "objectID": "Competition/project3.html",
+    "href": "Competition/project3.html",
+    "title": "Client Report - [Insert Project Title]",
     "section": "",
-    "text": "MarkDown Basics",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Full Stack"
+      "Competition",
+      "Project 3"
     ]
   },
   {
-    "objectID": "Cleansing_Exploration/project3.html",
-    "href": "Cleansing_Exploration/project3.html",
+    "objectID": "Competition/project4.html",
+    "href": "Competition/project4.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top"
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Competition",
+      "Project 4"
+    ]
   },
   {
-    "objectID": "Cleansing_Exploration/project2.html",
-    "href": "Cleansing_Exploration/project2.html",
+    "objectID": "Competition/project5.html",
+    "href": "Competition/project5.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top"
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Competition",
+      "Project 5"
+    ]
   },
   {
     "objectID": "story_telling.html",
@@ -343,14 +319,23 @@
     ]
   },
   {
-    "objectID": "Machine_Learning/project3.html",
-    "href": "Machine_Learning/project3.html",
-    "title": "Client Report - [Insert Project Title]",
+    "objectID": "ml.html",
+    "href": "ml.html",
+    "title": "about me",
     "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "text": "MarkDown Basics",
     "crumbs": [
-      "Machine Learning",
-      "Project 3"
+      "Machine Learning"
+    ]
+  },
+  {
+    "objectID": "ml.html#title-2-header",
+    "href": "ml.html#title-2-header",
+    "title": "about me",
+    "section": "",
+    "text": "MarkDown Basics",
+    "crumbs": [
+      "Machine Learning"
     ]
   },
   {
@@ -365,35 +350,82 @@
     ]
   },
   {
-    "objectID": "Full_Stack/project5.html",
-    "href": "Full_Stack/project5.html",
+    "objectID": "Machine_Learning/project1.html",
+    "href": "Machine_Learning/project1.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Full Stack",
-      "Project 5"
+      "Machine Learning",
+      "Project 1"
     ]
   },
   {
-    "objectID": "Full_Stack/project4.html",
-    "href": "Full_Stack/project4.html",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "about me",
+    "section": "",
+    "text": "MarkDown Basics"
+  },
+  {
+    "objectID": "index.html#title-2-header",
+    "href": "index.html#title-2-header",
+    "title": "about me",
+    "section": "",
+    "text": "MarkDown Basics"
+  },
+  {
+    "objectID": "Story_Telling/project3.html",
+    "href": "Story_Telling/project3.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Full Stack",
+      "Story Telling",
+      "Project 3"
+    ]
+  },
+  {
+    "objectID": "Story_Telling/project4.html",
+    "href": "Story_Telling/project4.html",
+    "title": "Client Report - [Insert Project Title]",
+    "section": "",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Story Telling",
       "Project 4"
     ]
   },
   {
-    "objectID": "Full_Stack/project1.html",
-    "href": "Full_Stack/project1.html",
+    "objectID": "Story_Telling/project5.html",
+    "href": "Story_Telling/project5.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Full Stack",
+      "Story Telling",
+      "Project 5"
+    ]
+  },
+  {
+    "objectID": "Cleansing_Projects/project2.html",
+    "href": "Cleansing_Projects/project2.html",
+    "title": "Client Report - [Insert Project Title]",
+    "section": "",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Data Cleansing",
+      "Project 2"
+    ]
+  },
+  {
+    "objectID": "Cleansing_Projects/project1.html",
+    "href": "Cleansing_Projects/project1.html",
+    "title": "Client Report - [Insert Project Title]",
+    "section": "",
+    "text": "Paste in a template\n\n\n\n\n Back to top",
+    "crumbs": [
+      "Data Cleansing",
       "Project 1"
     ]
   },
@@ -418,77 +450,52 @@
     ]
   },
   {
-    "objectID": "exploration.html",
-    "href": "exploration.html",
-    "title": "about me",
+    "objectID": "Cleansing_Exploration/project3.html",
+    "href": "Cleansing_Exploration/project3.html",
+    "title": "Client Report - [Insert Project Title]",
     "section": "",
-    "text": "MarkDown Basics",
-    "crumbs": [
-      "Data Exploration"
-    ]
+    "text": "Paste in a template\n\n\n\n\n Back to top"
   },
   {
-    "objectID": "exploration.html#title-2-header",
-    "href": "exploration.html#title-2-header",
-    "title": "about me",
+    "objectID": "Cleansing_Exploration/project4.html",
+    "href": "Cleansing_Exploration/project4.html",
+    "title": "Client Report - [Insert Project Title]",
     "section": "",
-    "text": "MarkDown Basics",
-    "crumbs": [
-      "Data Exploration"
-    ]
+    "text": "Paste in a template\n\n\n\n\n Back to top"
   },
   {
-    "objectID": "Cleansing_Projects/project3.html",
-    "href": "Cleansing_Projects/project3.html",
+    "objectID": "Cleansing_Exploration/project5.html",
+    "href": "Cleansing_Exploration/project5.html",
+    "title": "Client Report - [Insert Project Title]",
+    "section": "",
+    "text": "Paste in a template\n\n\n\n\n Back to top"
+  },
+  {
+    "objectID": "notebooks/starter_bank.html",
+    "href": "notebooks/starter_bank.html",
+    "title": "Alvin Charles - Data Science Portfolio",
+    "section": "",
+    "text": "# STEP 1: Import Libraries\n\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.metrics import (\n    classification_report, confusion_matrix, accuracy_score, roc_auc_score\n)\nfrom imblearn.over_sampling import SMOTE\n\npd.set_option(\"display.max_columns\", None)\nsns.set(style=\"whitegrid\", palette=\"viridis\", font_scale=1.1)\n\n\n# STEP 2: Load Dataset\nurl = \"https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/bank.csv\"\ndata = pd.read_csv(url)\n\nprint(\"✅ Data loaded successfully!\")\nprint(\"Shape:\", data.shape)\ndisplay(data.head())\n\n✅ Data loaded successfully!\nShape: (37069, 20)\n\n\n\n    \n\n\n\n\n\n\nage\njob\nmarital\neducation\ndefault\nhousing\nloan\ncontact\nmonth\nday_of_week\ncampaign\npdays\nprevious\npoutcome\nemp.var.rate\ncons.price.idx\ncons.conf.idx\neuribor3m\nnr.employed\ny\n\n\n\n\n0\n56\nhousemaid\nmarried\nbasic.4y\nno\nno\nno\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n1\n57\nservices\nmarried\nhigh.school\nunknown\nno\nno\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n2\n37\nservices\nmarried\nhigh.school\nno\nyes\nno\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n3\n40\nadmin.\nmarried\nbasic.6y\nno\nno\nno\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n4\n56\nservices\nmarried\nhigh.school\nno\nno\nyes\ntelephone\nmay\nmon\n1\n999\n0\nnonexistent\n1.1\n93.994\n-36.4\n4.857\n5191.0\nno\n\n\n\n\n\n    \n\n  \n    \n\n  \n    \n  \n    \n\n  \n\n    \n  \n\n\n    \n      \n\n\n    \n        \n    \n\n      \n\n\n\n      \n    \n\n    \n  \n\n\n\n# STEP 3: Data Cleaning & Transformation\n\ndata.replace(\"unknown\", pd.NA, inplace=True)\ndata.fillna(data.mode().iloc[0], inplace=True)\n\ndata[\"pdays\"] = data[\"pdays\"].replace(999, -1)\n\neducation_mapping = {\n    \"illiterate\": 0,\n    \"basic.4y\": 4,\n    \"basic.6y\": 6,\n    \"basic.9y\": 9,\n    \"high.school\": 12,\n    \"professional.course\": 13,\n    \"university.degree\": 16,\n    \"unknown\": -1\n}\ndata[\"education\"] = data[\"education\"].replace(education_mapping)\n\ncategorical_columns = [\n    \"job\", \"marital\", \"default\", \"housing\", \"loan\",\n    \"contact\", \"month\", \"day_of_week\", \"poutcome\"\n]\ndata = pd.get_dummies(data, columns=categorical_columns, drop_first=True)\n\ndata[\"y\"] = data[\"y\"].replace({\"no\": 0, \"yes\": 1}).astype(int)\n\nprint(\"✅ Data cleaned and encoded successfully!\")\nprint(\"Final shape:\", data.shape)\n\n✅ Data cleaned and encoded successfully!\nFinal shape: (37069, 42)\n\n\n/tmp/ipython-input-1174679516.py:23: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`\n  data[\"education\"] = data[\"education\"].replace(education_mapping)\n/tmp/ipython-input-1174679516.py:33: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`\n  data[\"y\"] = data[\"y\"].replace({\"no\": 0, \"yes\": 1}).astype(int)\n\n\n\n# STEP 4: Split Data\n\nX = data.drop(\"y\", axis=1)\ny = data[\"y\"]\n\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=42, stratify=y\n)\n\nprint(\"✅ Data split complete!\")\nprint(\"Training size:\", X_train.shape)\nprint(\"Testing size:\", X_test.shape)\nprint(\"\\nClass balance BEFORE SMOTE:\\n\", y_train.value_counts(normalize=True))\n\n✅ Data split complete!\nTraining size: (29655, 41)\nTesting size: (7414, 41)\n\nClass balance BEFORE SMOTE:\n y\n0    0.886495\n1    0.113505\nName: proportion, dtype: float64\n\n\n\n# STEP 5: Balance Data using SMOTE\n\nsmote = SMOTE(random_state=42, sampling_strategy=1.0)\nX_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)\n\nprint(\"✅ SMOTE applied successfully!\")\nprint(\"Training size after SMOTE:\", X_train_resampled.shape)\nprint(\"Class balance AFTER SMOTE:\\n\", y_train_resampled.value_counts(normalize=True))\n\n✅ SMOTE applied successfully!\nTraining size after SMOTE: (52578, 41)\nClass balance AFTER SMOTE:\n y\n0    0.5\n1    0.5\nName: proportion, dtype: float64\n\n\n\n# STEP 6: Train Random Forest Classifier\n\nrf = RandomForestClassifier(\n    n_estimators=200,\n    max_depth=10,\n    min_samples_leaf=25,\n    random_state=42,\n    n_jobs=-1\n)\n\nrf.fit(X_train_resampled, y_train_resampled)\nprint(\"✅ Random Forest model trained successfully!\")\n\n✅ Random Forest model trained successfully!\n\n\n\n# STEP 7: Evaluate Model\n\ny_pred = rf.predict(X_test)\ny_proba = rf.predict_proba(X_test)[:, 1]\n\nprint(\"\\n📊 Model Performance:\")\nprint(\"Accuracy:\", accuracy_score(y_test, y_pred))\nprint(\"ROC-AUC Score:\", roc_auc_score(y_test, y_proba))\nprint(\"\\nClassification Report:\")\nprint(classification_report(y_test, y_pred, target_names=[\"No\", \"Yes\"]))\n\ncm = confusion_matrix(y_test, y_pred)\nplt.figure(figsize=(6,4))\nsns.heatmap(cm, annot=True, fmt=\"d\", cmap=\"Blues\")\nplt.title(\"Confusion Matrix\")\nplt.xlabel(\"Predicted\")\nplt.ylabel(\"Actual\")\nplt.tight_layout()\nplt.show()\n\n\n📊 Model Performance:\nAccuracy: 0.8626922039384948\nROC-AUC Score: 0.7836544369476495\n\nClassification Report:\n              precision    recall  f1-score   support\n\n          No       0.95      0.90      0.92      6572\n         Yes       0.43      0.60      0.50       842\n\n    accuracy                           0.86      7414\n   macro avg       0.69      0.75      0.71      7414\nweighted avg       0.89      0.86      0.87      7414\n\n\n\n\n\n\n\n\n\n\n\n# STEP 8: Feature Importance\n\nfeature_importance = pd.Series(rf.feature_importances_, index=X.columns).sort_values(ascending=False)\ntop_features = feature_importance.head(10)\n\nplt.figure(figsize=(8,5))\nsns.barplot(x=top_features.values, y=top_features.index, palette=\"viridis\")\nplt.title(\"Top 10 Most Important Features\")\nplt.xlabel(\"Importance Score\")\nplt.ylabel(\"Feature\")\nplt.tight_layout()\nplt.show()\n\nprint(\"\\n🏆 Top 10 Important Features:\")\nprint(top_features)\n\n/tmp/ipython-input-2471977237.py:9: FutureWarning: \n\nPassing `palette` without assigning `hue` is deprecated and will be removed in v0.14.0. Assign the `y` variable to `hue` and set `legend=False` for the same effect.\n\n  sns.barplot(x=top_features.values, y=top_features.index, palette=\"viridis\")\n\n\n\n\n\n\n\n\n\n\n🏆 Top 10 Important Features:\neuribor3m           0.184502\nnr.employed         0.136018\nemp.var.rate        0.091356\ncons.conf.idx       0.089699\ncons.price.idx      0.062262\npdays               0.044008\npoutcome_success    0.039110\nhousing_yes         0.030035\nmarital_married     0.029772\nday_of_week_wed     0.029734\ndtype: float64\n\n\n\n# STEP 9: Business Insights Visuals\n\nmarital_cols = [c for c in data.columns if \"marital_\" in c]\nmarital_summary = (\n    data.melt(id_vars=\"y\", value_vars=marital_cols, var_name=\"MaritalStatus\", value_name=\"Active\")\n    .query(\"Active == 1\")\n    .groupby(\"MaritalStatus\")[\"y\"].mean()\n    .sort_values(ascending=False)\n)\nmarital_summary.index = marital_summary.index.str.replace(\"marital_\", \"\").str.title()\n\nplt.figure(figsize=(7,5))\nsns.barplot(x=marital_summary.index, y=marital_summary.values, palette=\"crest\")\nplt.title(\"💍 Subscription Rate by Marital Status\", fontsize=13, weight='bold')\nplt.ylabel(\"Average Subscription Rate\")\nplt.xlabel(\"Marital Status\")\nfor i, val in enumerate(marital_summary.values):\n    plt.text(i, val + 0.002, f\"{val*100:.2f}%\", ha='center', va='bottom')\nplt.tight_layout()\nplt.show()\n\njob_cols = [col for col in data.columns if \"job_\" in col]\njob_summary = (\n    data.melt(id_vars=\"y\", value_vars=job_cols, var_name=\"Job\", value_name=\"Active\")\n    .query(\"Active == 1\")\n    .groupby(\"Job\")[\"y\"].mean()\n    .sort_values(ascending=False)\n)\njob_summary.index = job_summary.index.str.replace(\"job_\", \"\").str.title()\n\nplt.figure(figsize=(9,6))\nsns.barplot(x=job_summary.values, y=job_summary.index, palette=\"viridis\")\nplt.title(\"💼 Subscription Rate by Profession\", fontsize=13, weight='bold')\nplt.xlabel(\"Average Subscription Rate\")\nplt.ylabel(\"Profession\")\nfor i, val in enumerate(job_summary.values):\n    plt.text(val + 0.002, i, f\"{val*100:.2f}%\", va='center')\nplt.tight_layout()\nplt.show()\n\ncampaign_effect = data.groupby(\"campaign\")[\"y\"].mean()\nplt.figure(figsize=(7,5))\nplt.plot(campaign_effect.index, campaign_effect.values, marker=\"o\")\nplt.title(\"☎️ Success Rate vs. Number of Contacts\")\nplt.xlabel(\"Number of Contacts in Campaign\")\nplt.ylabel(\"Subscription Rate\")\nplt.grid(alpha=0.3)\nplt.tight_layout()\nplt.show()\n\n/tmp/ipython-input-1354924602.py:16: FutureWarning: \n\nPassing `palette` without assigning `hue` is deprecated and will be removed in v0.14.0. Assign the `x` variable to `hue` and set `legend=False` for the same effect.\n\n  sns.barplot(x=marital_summary.index, y=marital_summary.values, palette=\"crest\")\n/tmp/ipython-input-1354924602.py:22: UserWarning: Glyph 128141 (\\N{RING}) missing from font(s) DejaVu Sans.\n  plt.tight_layout()\n/usr/local/lib/python3.12/dist-packages/IPython/core/pylabtools.py:151: UserWarning: Glyph 128141 (\\N{RING}) missing from font(s) DejaVu Sans.\n  fig.canvas.print_figure(bytes_io, **kw)\n\n\n\n\n\n\n\n\n\n/tmp/ipython-input-1354924602.py:36: FutureWarning: \n\nPassing `palette` without assigning `hue` is deprecated and will be removed in v0.14.0. Assign the `y` variable to `hue` and set `legend=False` for the same effect.\n\n  sns.barplot(x=job_summary.values, y=job_summary.index, palette=\"viridis\")\n/tmp/ipython-input-1354924602.py:42: UserWarning: Glyph 128188 (\\N{BRIEFCASE}) missing from font(s) DejaVu Sans.\n  plt.tight_layout()\n/usr/local/lib/python3.12/dist-packages/IPython/core/pylabtools.py:151: UserWarning: Glyph 128188 (\\N{BRIEFCASE}) missing from font(s) DejaVu Sans.\n  fig.canvas.print_figure(bytes_io, **kw)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n# STEP 10: Predict on Holdout Data\n\nholdout = pd.read_csv(\"https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/bank_holdout_test.csv\")\n\nholdout.replace(\"unknown\", pd.NA, inplace=True)\nholdout.fillna(data.mode().iloc[0], inplace=True)\nholdout[\"pdays\"] = holdout[\"pdays\"].replace(999, -1)\nholdout[\"education\"] = holdout[\"education\"].replace(education_mapping)\nholdout = pd.get_dummies(holdout, columns=categorical_columns, drop_first=True)\n\nmissing_cols = set(X.columns) - set(holdout.columns)\nfor c in missing_cols:\n    holdout[c] = 0\nholdout = holdout[X.columns]\n\npredictions = rf.predict(holdout)\npd.DataFrame(predictions, columns=[\"predictions\"]).to_csv(\"team3-module2-predictions2.0.csv\", index=False)\nprint(\"📁 Predictions saved to: team3-module2-predictions2.0.csv\")\n\n📁 Predictions saved to: team3-module2-predictions2.0.csv\n\n\n/tmp/ipython-input-3289667163.py:11: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`\n  holdout[\"education\"] = holdout[\"education\"].replace(education_mapping)\n\n\n\nimport pandas as pd\n\npreds = pd.read_csv(\"team3-module2-predictions2.0.csv\")\n\nprint(\"✅ File Loaded! Total Predictions:\", len(preds))\n\npercentages = preds[\"predictions\"].value_counts(normalize=True) * 100\nprint(\"\\n📊 Prediction Breakdown (%):\")\nprint(percentages.round(2))\n\nimport matplotlib.pyplot as plt\nplt.figure(figsize=(5,5))\nplt.pie(percentages, labels=percentages.index, autopct='%1.2f%%', colors=[\"skyblue\", \"lightgreen\"])\nplt.title(\"Distribution of Predictions (0 = No, 1 = Yes)\")\nplt.show()\n\n✅ File Loaded! Total Predictions: 4119\n\n📊 Prediction Breakdown (%):\npredictions\n0    85.14\n1    14.86\nName: proportion, dtype: float64\n\n\n\n\n\n\n\n\n\n\n\n\n Back to top"
+  },
+  {
+    "objectID": "Full_Stack/project2.html",
+    "href": "Full_Stack/project2.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Data Cleansing",
-      "Project 3"
-    ]
-  },
-  {
-    "objectID": "Cleansing_Projects/project2.html",
-    "href": "Cleansing_Projects/project2.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Data Cleansing",
+      "Full Stack",
       "Project 2"
     ]
   },
   {
-    "objectID": "Story_Telling/project5.html",
-    "href": "Story_Telling/project5.html",
+    "objectID": "Full_Stack/project1.html",
+    "href": "Full_Stack/project1.html",
     "title": "Client Report - [Insert Project Title]",
     "section": "",
     "text": "Paste in a template\n\n\n\n\n Back to top",
     "crumbs": [
-      "Story Telling",
-      "Project 5"
-    ]
-  },
-  {
-    "objectID": "Story_Telling/project4.html",
-    "href": "Story_Telling/project4.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Story Telling",
-      "Project 4"
-    ]
-  },
-  {
-    "objectID": "Story_Telling/project1.html",
-    "href": "Story_Telling/project1.html",
-    "title": "Client Report - [Insert Project Title]",
-    "section": "",
-    "text": "Paste in a template\n\n\n\n\n Back to top",
-    "crumbs": [
-      "Story Telling",
+      "Full Stack",
       "Project 1"
     ]
   }
